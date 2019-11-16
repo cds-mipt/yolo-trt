@@ -65,10 +65,9 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     m_Width = m_OrigImage.cols;
 
     // resize the DsImage with scale
-    float dim = std::max(m_Height, m_Width);
-    int resizeH = ((m_Height / dim) * inputH);
-    int resizeW = ((m_Width / dim) * inputW);
-    m_ScalingFactor = static_cast<float>(resizeH) / static_cast<float>(m_Height);
+    m_ScalingFactor = std::min(static_cast<float>(inputW) / m_Width, static_cast<float>(inputH) / m_Height);
+    int resizeH = static_cast<int>(m_ScalingFactor * m_Height);
+    int resizeW = static_cast<int>(m_ScalingFactor * m_Width);
 
     // Additional checks for images with non even dims
     if ((inputW - resizeW) % 2) resizeW--;

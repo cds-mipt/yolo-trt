@@ -71,7 +71,8 @@ struct TensorInfo
 {
     std::string blobName;
     uint stride{0};
-    uint gridSize{0};
+    uint gridSizeW{0};
+    uint gridSizeH{0};
     uint numClasses{0};
     uint numBBoxes{0};
     uint64_t volume{0};

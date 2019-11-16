@@ -39,17 +39,17 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx, const int imageH,
     const float* detections = &tensor.hostBuffer[imageIdx * tensor.volume];
 
     std::vector<BBoxInfo> binfo;
-    for (uint y = 0; y < tensor.gridSize; ++y)
+    for (uint y = 0; y < tensor.gridSizeH; ++y)
     {
-        for (uint x = 0; x < tensor.gridSize; ++x)
+        for (uint x = 0; x < tensor.gridSizeW; ++x)
         {
             for (uint b = 0; b < tensor.numBBoxes; ++b)
             {
                 const float pw = tensor.anchors[tensor.masks[b] * 2];
                 const float ph = tensor.anchors[tensor.masks[b] * 2 + 1];
 
-                const int numGridCells = tensor.gridSize * tensor.gridSize;
-                const int bbindex = y * tensor.gridSize + x;
+                const int numGridCells = tensor.gridSizeW * tensor.gridSizeH;
+                const int bbindex = y * tensor.gridSizeW + x;
                 const float bx
                     = x + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 0)];
 

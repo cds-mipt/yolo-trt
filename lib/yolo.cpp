@@ -224,19 +224,21 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType)
         else if (m_configBlocks.at(i).at("type") == "yolo")
         {
             nvinfer1::Dims prevTensorDims = previous->getDimensions();
-            assert(prevTensorDims.d[1] == prevTensorDims.d[2]);
             TensorInfo& curYoloTensor = m_OutputTensors.at(outputTensorCount);
-            curYoloTensor.gridSize = prevTensorDims.d[1];
-            curYoloTensor.stride = m_InputW / curYoloTensor.gridSize;
-            m_OutputTensors.at(outputTensorCount).volume = curYoloTensor.gridSize
-                * curYoloTensor.gridSize
+            curYoloTensor.gridSizeH = prevTensorDims.d[1];
+            curYoloTensor.gridSizeW = prevTensorDims.d[2];
+            assert(m_InputW / curYoloTensor.gridSizeW == m_InputH / curYoloTensor.gridSizeH);
+            curYoloTensor.stride = m_InputW / curYoloTensor.gridSizeW;
+            m_OutputTensors.at(outputTensorCount).volume = curYoloTensor.gridSizeW
+                * curYoloTensor.gridSizeH
                 * (curYoloTensor.numBBoxes * (5 + curYoloTensor.numClasses));
             std::string layerName = "yolo_" + std::to_string(i);
             curYoloTensor.blobName = layerName;
             nvinfer1::IPlugin* yoloPlugin
                 = new YoloLayerV3(m_OutputTensors.at(outputTensorCount).numBBoxes,
                                   m_OutputTensors.at(outputTensorCount).numClasses,
-                                  m_OutputTensors.at(outputTensorCount).gridSize);
+                                  m_OutputTensors.at(outputTensorCount).gridSizeW,
+                                  m_OutputTensors.at(outputTensorCount).gridSizeH);
             assert(yoloPlugin != nullptr);
             nvinfer1::IPluginLayer* yolo = m_Network->addPlugin(&previous, 1, *yoloPlugin);
             assert(yolo != nullptr);
@@ -254,38 +256,38 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType)
         }
         else if (m_configBlocks.at(i).at("type") == "region")
         {
-            nvinfer1::Dims prevTensorDims = previous->getDimensions();
-            assert(prevTensorDims.d[1] == prevTensorDims.d[2]);
-            TensorInfo& curRegionTensor = m_OutputTensors.at(outputTensorCount);
-            curRegionTensor.gridSize = prevTensorDims.d[1];
-            curRegionTensor.stride = m_InputW / curRegionTensor.gridSize;
-            m_OutputTensors.at(outputTensorCount).volume = curRegionTensor.gridSize
-                * curRegionTensor.gridSize
-                * (curRegionTensor.numBBoxes * (5 + curRegionTensor.numClasses));
-            std::string layerName = "region_" + std::to_string(i);
-            curRegionTensor.blobName = layerName;
-            nvinfer1::plugin::RegionParameters RegionParameters{
-                static_cast<int>(curRegionTensor.numBBoxes), 4,
-                static_cast<int>(curRegionTensor.numClasses), nullptr};
-            std::string inputVol = dimsToString(previous->getDimensions());
-            nvinfer1::IPlugin* regionPlugin
-                = nvinfer1::plugin::createYOLORegionPlugin(RegionParameters);
-            assert(regionPlugin != nullptr);
-            nvinfer1::IPluginLayer* region = m_Network->addPlugin(&previous, 1, *regionPlugin);
-            assert(region != nullptr);
-            region->setName(layerName.c_str());
-            previous = region->getOutput(0);
-            assert(previous != nullptr);
-            previous->setName(layerName.c_str());
-            std::string outputVol = dimsToString(previous->getDimensions());
-            m_Network->markOutput(*previous);
-            channels = getNumChannels(previous);
-            tensorOutputs.push_back(region->getOutput(0));
-            printLayerInfo(layerIndex, "region", inputVol, outputVol, std::to_string(weightPtr));
-            std::cout << "Anchors are being converted to network input resolution i.e. Anchors x "
-                      << curRegionTensor.stride << " (stride)" << std::endl;
-            for (auto& anchor : curRegionTensor.anchors) anchor *= curRegionTensor.stride;
-            ++outputTensorCount;
+//            nvinfer1::Dims prevTensorDims = previous->getDimensions(); TODO
+//            assert(prevTensorDims.d[1] == prevTensorDims.d[2]);
+//            TensorInfo& curRegionTensor = m_OutputTensors.at(outputTensorCount);
+//            curRegionTensor.gridSize = prevTensorDims.d[1];
+//            curRegionTensor.stride = m_InputW / curRegionTensor.gridSize;
+//            m_OutputTensors.at(outputTensorCount).volume = curRegionTensor.gridSize
+//                * curRegionTensor.gridSize
+//                * (curRegionTensor.numBBoxes * (5 + curRegionTensor.numClasses));
+//            std::string layerName = "region_" + std::to_string(i);
+//            curRegionTensor.blobName = layerName;
+//            nvinfer1::plugin::RegionParameters RegionParameters{
+//                static_cast<int>(curRegionTensor.numBBoxes), 4,
+//                static_cast<int>(curRegionTensor.numClasses), nullptr};
+//            std::string inputVol = dimsToString(previous->getDimensions());
+//            nvinfer1::IPlugin* regionPlugin
+//                = nvinfer1::plugin::createYOLORegionPlugin(RegionParameters);
+//            assert(regionPlugin != nullptr);
+//            nvinfer1::IPluginLayer* region = m_Network->addPlugin(&previous, 1, *regionPlugin);
+//            assert(region != nullptr);
+//            region->setName(layerName.c_str());
+//            previous = region->getOutput(0);
+//            assert(previous != nullptr);
+//            previous->setName(layerName.c_str());
+//            std::string outputVol = dimsToString(previous->getDimensions());
+//            m_Network->markOutput(*previous);
+//            channels = getNumChannels(previous);
+//            tensorOutputs.push_back(region->getOutput(0));
+//            printLayerInfo(layerIndex, "region", inputVol, outputVol, std::to_string(weightPtr));
+//            std::cout << "Anchors are being converted to network input resolution i.e. Anchors x "
+//                      << curRegionTensor.stride << " (stride)" << std::endl;
+//            for (auto& anchor : curRegionTensor.anchors) anchor *= curRegionTensor.stride;
+//            ++outputTensorCount;
         }
         else if (m_configBlocks.at(i).at("type") == "reorg")
         {
@@ -534,7 +536,6 @@ void Yolo::parseConfigBlocks()
             m_InputH = std::stoul(block.at("height"));
             m_InputW = std::stoul(block.at("width"));
             m_InputC = std::stoul(block.at("channels"));
-            assert(m_InputW == m_InputH);
             m_InputSize = m_InputC * m_InputH * m_InputW;
         }
         else if ((block.at("type") == "region") || (block.at("type") == "yolo"))

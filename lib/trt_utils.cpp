@@ -561,16 +561,15 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     assert(block.at("type") == "upsample");
     nvinfer1::Dims inpDims = input->getDimensions();
     assert(inpDims.nbDims == 3);
-    assert(inpDims.d[1] == inpDims.d[2]);
     int h = inpDims.d[1];
     int w = inpDims.d[2];
     int stride = std::stoi(block.at("stride"));
     // add pre multiply matrix as a constant
     nvinfer1::Dims preDims{3,
-                           {1, stride * h, w},
+                           {1, stride * h, h},
                            {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
                             nvinfer1::DimensionType::kSPATIAL}};
-    int size = stride * h * w;
+    int size = stride * h * h;
     nvinfer1::Weights preMul{nvinfer1::DataType::kFLOAT, nullptr, size};
     float* preWt = new float[size];
     /* (2*h * w)
@@ -587,7 +586,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     {
         for (int s = 0; s < stride; ++s)
         {
-            for (int j = 0; j < w; ++j, ++idx)
+            for (int j = 0; j < h; ++j, ++idx)
             {
                 preWt[idx] = (i == j) ? 1.0 : 0.0;
             }
@@ -601,10 +600,10 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     preM->setName(preLayerName.c_str());
     // add post multiply matrix as a constant
     nvinfer1::Dims postDims{3,
-                            {1, h, stride * w},
+                            {1, w, stride * w},
                             {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
                              nvinfer1::DimensionType::kSPATIAL}};
-    size = stride * h * w;
+    size = stride * w * w;
     nvinfer1::Weights postMul{nvinfer1::DataType::kFLOAT, nullptr, size};
     float* postWt = new float[size];
     /* (h * 2*w)
@@ -614,7 +613,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
       ...,
       [0, 0, 0, 0, ..., 1, 1] ]
     */
-    for (int i = 0, idx = 0; i < h; ++i)
+    for (int i = 0, idx = 0; i < w; ++i)
     {
         for (int j = 0; j < stride * w; ++j, ++idx)
         {

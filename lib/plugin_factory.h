@@ -46,7 +46,7 @@ SOFTWARE.
 
 // Forward declaration of cuda kernels
 cudaError_t cudaYoloLayerV3(const void* input, void* output, const uint& batchSize,
-                            const uint& gridSize, const uint& numOutputClasses,
+                            const uint& gridSizeW, const uint& gridSizeH, const uint& numOutputClasses,
                             const uint& numBBoxes, uint64_t outputSize, cudaStream_t stream);
 
 class PluginFactory : public nvinfer1::IPluginFactory
@@ -106,6 +106,7 @@ class YoloLayerV3 : public nvinfer1::IPlugin
 public:
     YoloLayerV3(const void* data, size_t length);
     YoloLayerV3(const uint& numBoxes, const uint& numClasses, const uint& gridSize);
+    YoloLayerV3(const uint& numBoxes, const uint& numClasses, const uint& gridSizeW, const uint& gridSizeH);
     int getNbOutputs() const override;
     nvinfer1::Dims getOutputDimensions(int index, const nvinfer1::Dims* inputs,
                                        int nbInputDims) override;
@@ -135,7 +136,8 @@ private:
     }
     uint m_NumBoxes;
     uint m_NumClasses;
-    uint m_GridSize;
+    uint m_GridSizeW;
+    uint m_GridSizeH;
     uint64_t m_OutputSize;
 };
 
