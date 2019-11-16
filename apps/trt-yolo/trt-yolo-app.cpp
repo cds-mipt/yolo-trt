@@ -33,14 +33,11 @@ SOFTWARE.
 #include <string>
 #include <sys/time.h>
 
-int main(int argc, char** argv)
+int main()
 {
-    // Flag set in the command line overrides the value in the flagfile
-    gflags::SetUsageMessage(
-        "Usage : trt-yolo-app --flagfile=</path/to/config_file.txt> --<flag>=value ...");
-
-    // parse config params
-    yoloConfigParserInit(argc, argv);
+    int argc_ = 3;
+    const char* argv_[] = {"execname", "--flagfile", "config/config.txt"};
+    yoloConfigParserInit(argc_, const_cast<char **>(argv_));
     NetworkInfo yoloInfo = getYoloNetworkInfo();
     InferParams yoloInferParams = getYoloInferParams();
     uint64_t seed = getSeed();
