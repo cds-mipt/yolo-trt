@@ -24,6 +24,7 @@ SOFTWARE.
 */
 #include "ds_image.h"
 #include <experimental/filesystem>
+#include <utility>
 
 DsImage::DsImage() :
     m_Height(0),
@@ -34,6 +35,40 @@ DsImage::DsImage() :
     m_RNG(cv::RNG(unsigned(std::time(0)))),
     m_ImageName()
 {
+}
+
+DsImage::DsImage(cv::Mat OrigImage, const int& inputH, const int& inputW) :
+    m_Height(OrigImage.rows),
+    m_Width(OrigImage.cols),
+    m_XOffset(0),
+    m_YOffset(0),
+    m_ScalingFactor(0.0),
+    m_RNG(cv::RNG(unsigned(std::time(0)))),
+    m_ImageName(),
+    m_OrigImage(std::move(OrigImage))
+{
+    // resize the DsImage with scale
+    m_ScalingFactor = std::min(static_cast<float>(inputW) / m_Width, static_cast<float>(inputH) / m_Height);
+    int resizeH = static_cast<int>(m_ScalingFactor * m_Height);
+    int resizeW = static_cast<int>(m_ScalingFactor * m_Width);
+
+    // Additional checks for images with non even dims
+    if ((inputW - resizeW) % 2) resizeW--;
+    if ((inputH - resizeH) % 2) resizeH--;
+    assert((inputW - resizeW) % 2 == 0);
+    assert((inputH - resizeH) % 2 == 0);
+
+    m_XOffset = (inputW - resizeW) / 2;
+    m_YOffset = (inputH - resizeH) / 2;
+
+    assert(2 * m_XOffset + resizeW == inputW);
+    assert(2 * m_YOffset + resizeH == inputH);
+
+    // resizing
+    cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_CUBIC);
+    // letterboxing
+    cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset,
+                       m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
 }
 
 DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) :
