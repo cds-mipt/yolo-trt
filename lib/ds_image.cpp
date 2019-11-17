@@ -37,6 +37,19 @@ DsImage::DsImage() :
 {
 }
 
+DsImage::DsImage(cv::Mat OrigImage) :
+    m_Height(OrigImage.rows),
+    m_Width(OrigImage.cols),
+    m_XOffset(0),
+    m_YOffset(0),
+    m_ScalingFactor(1.0),
+    m_RNG(cv::RNG(unsigned(std::time(0)))),
+    m_ImageName(),
+    m_OrigImage(OrigImage),
+    m_LetterboxImage(std::move(OrigImage))
+{
+}
+
 DsImage::DsImage(cv::Mat OrigImage, const int& inputH, const int& inputW) :
     m_Height(OrigImage.rows),
     m_Width(OrigImage.cols),
