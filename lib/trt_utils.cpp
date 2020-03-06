@@ -262,21 +262,18 @@ std::vector<float> loadWeights(const std::string weightsFilePath, const std::str
     assert(file.good());
     std::string line;
 
-    if (networkType == "yolov2")
+    int major, minor, revision;
+    file.read(reinterpret_cast<char*>(&major), sizeof(int));
+    file.read(reinterpret_cast<char*>(&minor), sizeof(int));
+    file.read(reinterpret_cast<char*>(&revision), sizeof(int));
+    if ((major * 10 + minor) >= 2 && major < 1000 && minor < 1000) 
     {
-        // Remove 4 int32 bytes of data from the stream belonging to the header
-        file.ignore(4 * 4);
-    }
-    else if ((networkType == "yolov3") || (networkType == "yolov3-tiny")
-             || (networkType == "yolov2-tiny"))
+        size_t tmp;
+        file.read(reinterpret_cast<char*>(&tmp), sizeof(size_t));
+    } else 
     {
-        // Remove 5 int32 bytes of data from the stream belonging to the header
-        file.ignore(4 * 5);
-    }
-    else
-    {
-        std::cout << "Invalid network type" << std::endl;
-        assert(0);
+        size_t tmp;
+        file.read(reinterpret_cast<char*>(&tmp), sizeof(int));
     }
 
     std::vector<float> weights;
