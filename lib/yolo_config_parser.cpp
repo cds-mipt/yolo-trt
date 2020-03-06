@@ -127,14 +127,18 @@ static bool verifyRequiredFlags()
     return true;
 }
 
-void yoloConfigParserInit(int argc, char** argv)
+void yoloConfigParserInit(int argc, char** argv, const std::string home)
 {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     assert(verifyRequiredFlags());
 
     FLAGS_calibration_images_path
-        = isFlagDefault(FLAGS_calibration_images_path) ? "" : FLAGS_calibration_images_path;
-    FLAGS_test_images_path = isFlagDefault(FLAGS_test_images_path) ? "" : FLAGS_test_images_path;
+        = home + (isFlagDefault(FLAGS_calibration_images_path) ? "" : FLAGS_calibration_images_path);
+    FLAGS_test_images_path = home + (isFlagDefault(FLAGS_test_images_path) ? "" : FLAGS_test_images_path);
+
+    FLAGS_config_file_path = home + FLAGS_config_file_path;
+    FLAGS_wts_file_path = home + FLAGS_wts_file_path;
+    FLAGS_labels_file_path = home + FLAGS_labels_file_path;
 
     if (isFlagDefault(FLAGS_engine_file_path))
     {

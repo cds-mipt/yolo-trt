@@ -32,7 +32,7 @@ SOFTWARE.
 #include <gflags/gflags.h>
 
 // Init to be called at the very beginning to verify all config params are valid
-void yoloConfigParserInit(int argc, char** argv);
+void yoloConfigParserInit(int argc, char** argv, const std::string home = "");
 
 NetworkInfo getYoloNetworkInfo();
 InferParams getYoloInferParams();
